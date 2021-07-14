@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2021/2/23 06:30
-# @Author  : srcrs
-# @Email   : srcrs@foxmail.com
 
 import smtplib,traceback,os,requests,urllib,json
 from email.mime.text import MIMEText
@@ -66,7 +63,6 @@ def sendEmail(email):
 #钉钉群自定义机器人推送
 def sendDing(webhook):
     try:
-        #要发送邮件内容
         content = readFile('./log.txt')
         data = {
             'msgtype': 'markdown',
@@ -87,10 +83,10 @@ def sendDing(webhook):
         print(traceback.format_exc())
 
 #发送Tg通知
-def sendTg(tgBot):
+def sendTg(tgToken,tgUserId):
     try:
-        token = tgBot['tgToken']
-        chat_id = tgBot['tgUserId']
+        token = tgToken
+        chat_id = tgUserId
         #发送内容
         content = readFile_text('./log.txt')
         data = {
@@ -128,10 +124,10 @@ def sendPushplus(token):
         print(traceback.format_exc())
 
 #企业微信通知，普通微信可接收
-def sendWechat(wex):
+def sendWechat(wex_id,wex_secret,wx_agentld):
     #获得access_token
     url = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken'
-    token_param = '?corpid=' + wex['id'] + '&corpsecret=' + wex['secret']
+    token_param = '?corpid=' + wex_id + '&corpsecret=' + wex_secret
     token_data = requests.get(url + token_param)
     token_data.encoding = 'utf-8'
     token_data = token_data.json()
@@ -142,7 +138,7 @@ def sendWechat(wex):
     data = {
         "touser": "@all",
         "msgtype": "text",
-        "agentid": wex['agentld'],
+        "agentid": wx_agentld,
         "text": {"content": content}
     }
     send_url = 'https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=' + access_token
@@ -152,11 +148,11 @@ def sendWechat(wex):
     print('Wechat send : ' + res['errmsg'])
 
 #发送IFTTT通知
-def sendIFTTT(ifttt):
+def sendIFTTT(ifttt_apiKey,ifttt_eventName):
     try:
         content = readFile('./log.txt')
         body = { ifttt['subjectKey']: 'HeytapTask每日报表', ifttt['contentKey']: content }
-        url = 'https://maker.ifttt.com/trigger/{event_name}/with/key/{key}'.format(event_name=ifttt['eventName'], key=ifttt['apiKey'])
+        url = 'https://maker.ifttt.com/trigger/{event_name}/with/key/{key}'.format(event_name=ifttt_eventName, key=ifttt_apiKey)
         response = requests.post(url, json=body)
         print(response)
     except Exception as e:
@@ -164,10 +160,10 @@ def sendIFTTT(ifttt):
         print(traceback.format_exc())
 
 #发送Bark通知
-def sendBark(Bark):
+def sendBark(Barkkey1,Barksave1):
     #发送内容
-    Barkkey = Bark['Barkkey']
-    Barksave = Bark['Barksave']
+    Barkkey = Barkkey1
+    Barksave = Barksave1
     content = readFile_text('./log.txt')
     data = {
         "title": "HeytapTask每日报表",
