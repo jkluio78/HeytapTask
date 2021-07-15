@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2021/7/14
+# @Time    : 2021/7/15
 # @Author  : hwkxk(丶大K丶)
 # @Email   : k@hwkxk.cn
 
@@ -55,7 +55,7 @@ def get_infouser(HT_cookies,HT_UA):
     try:
         result = response.json()
         if result['code'] == 200:
-            logger.info('=== 欢太商城任务 ===')
+            logger.info('==== 欢太商城任务 ====')
             logger.info('【登录成功】: ' + result['data']['realName'])
             flag = True
         else:
@@ -103,30 +103,34 @@ def daySign_task():
         'referer':'https://store.oppo.com/cn/app/taskCenter/index'
         }
         res = taskCenter()
-        res = res['data']['userReportInfoForm']['gifts']
-        for data in res:
-            if data['date'] == dated:
-                qd = data
-        if qd['today'] == False:
-            data = "amount=" + str(qd['credits'])
-            res1 = client.post('https://store.oppo.com/cn/oapi/credits/web/report/immediately', headers=headers,data=data)
-            res1 = res1.json()
-            if res1['code'] == 200:
-                logger.info('【每日签到成功】: ' + res1['data']['message'])
-            else:
-                logger.info('【每日签到失败】: ' + res1)
-        else:
-            print(str(qd['credits']),str(qd['type']),str(qd['gift']))
-            if len(qd['type']) == 0:
+        status = res['data']['userReportInfoForm']['status']
+        if status == 0:
+            res = res['data']['userReportInfoForm']['gifts']
+            for data in res:
+                if data['date'] == dated:
+                    qd = data
+            if qd['today'] == False:
                 data = "amount=" + str(qd['credits'])
+                res1 = client.post('https://store.oppo.com/cn/oapi/credits/web/report/immediately', headers=headers,data=data)
+                res1 = res1.json()
+                if res1['code'] == 200:
+                    logger.info('【每日签到成功】: ' + res1['data']['message'])
+                else:
+                    logger.info('【每日签到失败】: ' + res1)
             else:
-                data = "amount=" + str(qd['credits']) + "&type=" + str(qd['type']) + "&gift=" + str(qd['gift'])
-            res1 = client.post('https://store.oppo.com/cn/oapi/credits/web/report/immediately',  headers=headers,data=data)
-            res1 = res1.json()
-            if res1['code'] == 200:
-                logger.info('【每日签到成功】: ' + res1['data']['message'])
-            else:
-                logger.info('【每日签到失败】')
+                #print(str(qd['credits']),str(qd['type']),str(qd['gift']))
+                if len(qd['type']) == 0:
+                    data = "amount=" + str(qd['credits'])
+                else:
+                    data = "amount=" + str(qd['credits']) + "&type=" + str(qd['type']) + "&gift=" + str(qd['gift'])
+                res1 = client.post('https://store.oppo.com/cn/oapi/credits/web/report/immediately',  headers=headers,data=data)
+                res1 = res1.json()
+                if res1['code'] == 200:
+                    logger.info('【每日签到成功】: ' + res1['data']['message'])
+                else:
+                    logger.info('【每日签到失败】: ' + str(res1))
+        else:
+            logger.info('【每日签到】: 已经签到过了！' )   
         time.sleep(1)
     except Exception as e:
         print(traceback.format_exc())
@@ -175,6 +179,8 @@ def daily_viewgoods():
                 logger.info('【每日浏览商品】: ' + '任务完成！积分领取+' + str(qd['credits']))
             else:
                 logger.info('【每日浏览商品】: ' + '领取积分奖励出错！')
+        else:
+            logger.info('【每日浏览商品】: ' + '任务已完成！')
     except Exception as e:
         print(traceback.format_exc())
         logging.error('【每日浏览任务】: 错误，原因为: ' + str(e))
@@ -214,6 +220,8 @@ def daily_sharegoods():
                 logger.info('【每日分享商品】: ' + '任务完成！积分领取+' + str(qd['credits']))
             else:
                 logger.info('【每日分享商品】: ' + '领取积分奖励出错！')
+        else:
+            logger.info('【每日分享商品】: ' + '任务已完成！')
     except Exception as e:
         print(traceback.format_exc())
         logging.error('【每日分享商品】: 错误，原因为: ' + str(e))
@@ -253,6 +261,8 @@ def daily_viewpush():
                 logger.info('【每日点推送】: ' + '任务完成！积分领取+' + str(qd['credits']))
             else:
                 logger.info('【每日点推送】: ' + '领取积分奖励出错！')
+        else:
+            logger.info('【每日点推送】: ' + '任务已完成！')
     except Exception as e:
         print(traceback.format_exc())
         logging.error('【每日推送消息】: 错误，原因为: ' + str(e))
@@ -300,22 +310,132 @@ def lottery(datas):
     res = res.json()
     return res
 
+#活动平台完成任务接口
+def task_finish(aid,t_index):
+    headers = {
+    'Accept': 'application/json, text/plain, */*;q=0.01',
+    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+    'Connection': 'keep-alive',
+    'User-Agent': HT_UserAgent,
+    'Accept-Encoding': 'gzip, deflate',
+    'cookie': HT_cookies,
+    'Origin': 'https://hd.oppo.com',
+    'X-Requested-With': 'XMLHttpRequest',
+    }
+    datas="aid=" + str(aid) + "&t_index=" + str(t_index)
+    res = client.post('https://hd.oppo.com/task/finish', data=datas, headers=headers)
+    res = res.json()
+    return res
+
+#活动平台领取任务奖励接口
+def task_award(aid,t_index):
+    headers = {
+    'Accept': 'application/json, text/plain, */*;q=0.01',
+    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+    'Connection': 'keep-alive',
+    'User-Agent': HT_UserAgent,
+    'Accept-Encoding': 'gzip, deflate',
+    'cookie': HT_cookies,
+    'Origin': 'https://hd.oppo.com',
+    'X-Requested-With': 'XMLHttpRequest',
+    }
+    datas="aid=" + str(aid) + "&t_index=" + str(t_index)
+    res = client.post('https://hd.oppo.com/task/award', data=datas, headers=headers)
+    res = res.json()
+    return res
+
 #天天积分翻倍活动 - 长期 最多3次
 def tiantianjifen_lottery():
-    dated = int(time.time())
-    endtime = time.mktime(time.strptime("2022-1-1 23:59:59", '%Y-%m-%d %H:%M:%S'))#设置活动结束日期
-    if dated < endtime :
-        x=1
-        while x <= 3:
-            data = "aid=675&lid=1289&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
-            res = lottery(data)
-            print(res)
-            goods_name = res['data']['goods_name']
-            logger.info('【天天积分翻倍活动】第'+ str(x) +'次，获得:'+ str(goods_name))
-            x += 1
-            time.sleep(5)
-    else:
-        logger.info('【天天积分翻倍活动已结束，不再执行】')
+    x=1
+    while x <= 3:
+        data = "aid=675&lid=1289&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
+        res = lottery(data)
+        msg = res['msg']
+        print(msg)
+        goods_name = res['data']['goods_name']
+        logger.info('【天天积分翻倍活动】第'+ str(x) +'次，获得:'+ str(goods_name))
+        x += 1
+        time.sleep(5)
+
+
+#位置: APP → 我的 → 赚积分 → 转盘
+def zhuanjifen_task():
+    headers = {
+    'Accept': '*/*',
+    'Connection': 'keep-alive',
+    'User-Agent': HT_UserAgent,
+    'Accept-Encoding': 'gzip, deflate',
+    'cookie': HT_cookies,
+    'X-Requested-With': 'XMLHttpRequest',
+    'referer':'https://hd.oppo.com/act/m/2021/jifenzhuanpan/index.html?us=gerenzhongxin&um=hudongleyuan&uc=yingjifen'
+    }
+    data = "aid=1418&lid=1307&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
+    res = lottery(data)
+    print(res)
+    goods_name = res['data']['goods_name']
+    msg = res['msg']
+    logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
+
+    taskList=client.get('https://hd.oppo.com/task/list?aid=1418', headers=headers)
+    taskList=taskList.json()
+    for i, jobs in enumerate(taskList['data']):
+        print (jobs['t_status']) #print (jobs.get('t_index'))
+        if jobs['t_status'] == 0:
+            t_index=jobs['t_index']
+            aid=t_index[:t_index.index("i")]
+            finishmsg=task_finish (aid,t_index)
+            if finishmsg['no']==200:
+                time.sleep(1)
+                awardmsg=task_award(aid,t_index)
+                if awardmsg['no']==200:
+                    res = lottery(data)
+                    msg = res['msg']
+                    print(msg)
+                    goods_name = res['data']['goods_name']
+                    logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
+                    time.sleep(3)
+                else:
+                    print('领取奖励出错：', awardmsg)
+            else:
+                print('完成任务出错：', finishmsg)
+        elif jobs['t_status'] == 1:
+            t_index=jobs['t_index']
+            aid=t_index[:t_index.index("i")]
+            awardmsg=task_award(aid,t_index)
+            print(awardmsg['no'])
+            if awardmsg['no']==200:
+                res = lottery(data)
+                msg = res['msg']
+                print(msg)
+                goods_name = res['data']['goods_name']
+                logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
+                time.sleep(3)
+            else:
+                print('领取奖励出错：', awardmsg)
+
+
+#智能生活0元抽奖-宠粉转盘
+def zhinengshenghuo_lottery():
+    x=1
+    while x <= 5:
+        data = "aid=1270&lid=1431&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
+        res = lottery(data)
+        msg = res['msg']
+        print(msg)
+        goods_name = res['data']['goods_name']
+        logger.info('【智能生活转盘】第'+ str(x) +'次，获得:'+str(goods_name))
+        x += 1
+        time.sleep(5)
+
+#realme宠粉计划-幸运抽奖-转盘
+def realme_lottery():
+    data = "aid=1182&lid=1429&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
+    res = lottery(data)
+    msg = res['msg']
+    print(msg)
+    goods_name = res['data']['goods_name']
+    logger.info('【realme宠粉计划转盘】获得:'+ str(goods_name))
+    time.sleep(3)
 
 #
 #—————短期活动任务↓———————
@@ -328,42 +448,14 @@ def vipdate_lottery():
     if dated < endtime :
         data = "aid=1589&lid=1486&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
         res = lottery(data)
-        print(res)
+        #print(res)
         msg = res['msg']
+        print(msg)
         goods_name = res['data']['goods_name']
         logger.info('【瓜分1亿转盘抽奖活动】获得:'+ str(goods_name))
     else:
         logger.info('【瓜分1亿转盘抽奖活动已结束，不再执行】')
 
-#智能生活0元抽奖-宠粉转盘
-def zhinengshenghuo_lottery():
-    dated = int(time.time())
-    endtime = time.mktime(time.strptime("2022-1-1 23:59:59", '%Y-%m-%d %H:%M:%S')) #设置活动结束日期
-    if dated < endtime :
-        x=1
-        while x <= 5:
-            data = "aid=1270&lid=1431&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
-            res = lottery(data)
-            print(res)
-            goods_name = res['data']['goods_name']
-            logger.info('【智能生活转盘】第'+ str(x) +'次，获得:'+str(goods_name))
-            x += 1
-            time.sleep(5)
-    else:
-        logger.info('【智能生活0元抽奖活动已结束，不再执行】')
-
-#reakme宠粉计划-幸运抽奖-转盘
-def reakme_lottery():
-    dated = int(time.time())
-    endtime = time.mktime(time.strptime("2022-1-1 23:59:59", '%Y-%m-%d %H:%M:%S')) #设置活动结束日期
-    if dated < endtime :
-        data = "aid=1182&lid=1429&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
-        res = lottery(data)
-        goods_name = res['data']['goods_name']
-        logger.info('【reakme宠粉计划转盘】获得:'+ str(goods_name))
-        time.sleep(3)
-    else:
-        logger.info('【reakme宠粉计划活动已结束，不再执行】')
 
 
 #腾讯云函数入口
@@ -377,23 +469,26 @@ def main(event, context):
     global HT_UserAgent
     HT_cookies = users.get("config","cookies")
     HT_UserAgent = users.get("config","User-Agent")
-    print(HT_cookies,HT_UserAgent)
+    #print(HT_cookies,HT_UserAgent)
     client = get_infouser(HT_cookies,HT_UserAgent)
 
+    #如果不想做特定任务可以手动注释
     if client != False:
         daySign_task() #执行每日签到
         daily_viewgoods() #执行每日商品浏览任务
         daily_sharegoods() #执行每日商品分享任务
         daily_viewpush() #执行每日点推送任务
         tiantianjifen_lottery() #天天积分翻倍
+        zhuanjifen_task() #我的-赚积分-转盘
         vipdate_lottery() #超级会员日转盘
-        zhinengshenghuo_lottery() #智能生活-0元抽奖-宠粉转盘
-        reakme_lottery() #reakme宠粉计划 转盘
+        zhinengshenghuo_lottery() #智能生活-0元抽奖-宠粉转盘 可能此活动中奖率低！返回空白是正常
+        realme_lottery() #realme宠粉计划 转盘
+
     
     if users.has_option("dingding", 'dingtalkWebhook'):
         notify.sendDing(users.get("dingding","dingtalkWebhook")) #钉钉推送日记          
     if users.has_option("telegramBot", 'tgToken'):
-        notify.sendTg(users.get("telegramBot","tgToken"),users.get("telegramBot","tgUserId")) #TG机器人推送日记
+        notify.sendTg(users.get("telegramBot","tgToken"),users.get("telegramBot","tgUserId"),users.get("telegramBot","tghost")) #TG机器人推送日记
     if users.has_option("pushplus", 'pushplusToken'):
         notify.sendPushplus(users.get("pushplus","pushplusToken")) #push+ 推送日记
     if users.has_option("enterpriseWechat", 'id'):
