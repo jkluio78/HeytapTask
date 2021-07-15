@@ -83,10 +83,11 @@ def sendDing(webhook):
         print(traceback.format_exc())
 
 #发送Tg通知
-def sendTg(tgToken,tgUserId):
+def sendTg(tgToken,tgUserId,apihost):
     try:
         token = tgToken
         chat_id = tgUserId
+        tghost = apihost
         #发送内容
         content = readFile_text('./log.txt')
         data = {
@@ -97,7 +98,10 @@ def sendTg(tgToken,tgUserId):
         #token = os.environ.get('TG_TOKEN')
         #用户的ID
         #chat_id = os.environ.get('TG_USERID')
-        url = f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={content}'
+        if tghost == None:
+            url = f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={content}'     
+        else:
+            url = f'https://{tghost}/bot{token}/sendMessage?chat_id={chat_id}&text={content}' 
         session = requests.Session()
         resp = session.post(url)
         print(resp)
