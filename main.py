@@ -27,7 +27,7 @@ def readConfig():
     try:
         #用户配置信息
         global userconfig
-        userconfig = configparser.ConfigParser()
+        userconfig = configparser.RawConfigParser()
         path ="./config.ini"
         userconfig.read(path,encoding="utf-8")
         return userconfig
@@ -172,7 +172,7 @@ def daily_viewgoods():
                 else:
                     logger.info('【每日浏览商品】: ' + "领取积分奖励出错！")
             else:
-                ogger.info('【每日浏览商品】: ' + '错误，获取商品列表失败')
+                logger.info('【每日浏览商品】: ' + '错误，获取商品列表失败')
         elif qd['completeStatus'] == 1:
             res2 = cashingCredits(qd['marking'],qd['type'],qd['credits'])
             if res2 == True:
