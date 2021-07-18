@@ -38,7 +38,7 @@ def readFile_html(filepath):
 def sendEmail(email):
     try:
         #要发送邮件内容
-        content = readFile('./log.txt')
+        content = readFile('/tmp/log.txt')
         #接收方邮箱
         receivers = email
         #邮件主题
@@ -63,11 +63,11 @@ def sendEmail(email):
 #钉钉群自定义机器人推送
 def sendDing(webhook):
     try:
-        content = readFile('./log.txt')
+        content = readFile('/tmp/log.txt')
         data = {
             'msgtype': 'markdown',
             'markdown': {
-                'title': 'HeytapTask每日报表',
+                'title': '黑魔每日报表',
                 'text': content
             }
         }
@@ -83,13 +83,12 @@ def sendDing(webhook):
         print(traceback.format_exc())
 
 #发送Tg通知
-def sendTg(tgToken,tgUserId,apihost):
+def sendTg(tgToken,tgUserId):
     try:
         token = tgToken
         chat_id = tgUserId
-        tghost = apihost
         #发送内容
-        content = readFile_text('./log.txt')
+        content = readFile_text('/tmp/log.txt')
         data = {
             'HeytapTask每日报表':content
         }
@@ -98,10 +97,7 @@ def sendTg(tgToken,tgUserId,apihost):
         #token = os.environ.get('TG_TOKEN')
         #用户的ID
         #chat_id = os.environ.get('TG_USERID')
-        if tghost == None:
-            url = f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={content}'     
-        else:
-            url = f'https://{tghost}/bot{token}/sendMessage?chat_id={chat_id}&text={content}' 
+        url = f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={content}'
         session = requests.Session()
         resp = session.post(url)
         print(resp)
@@ -116,7 +112,7 @@ def sendPushplus(token):
         data = {
             "token": token,
             "title": "HeytapTask每日报表",
-            "content": readFile_html('./log.txt')
+            "content": readFile_html('/tmp/log.txt')
         }
         url = 'http://www.pushplus.plus/send'
         headers = {'Content-Type': 'application/json'}
@@ -137,7 +133,7 @@ def sendWechat(wex_id,wex_secret,wx_agentld):
     token_data = token_data.json()
     access_token = token_data['access_token']
     #发送内容
-    content = readFile_text('./log.txt')
+    content = readFile_text('/tmp/log.txt')
     #创建要发送的消息
     data = {
         "touser": "@all",
@@ -154,7 +150,7 @@ def sendWechat(wex_id,wex_secret,wx_agentld):
 #发送IFTTT通知
 def sendIFTTT(ifttt_apiKey,ifttt_eventName):
     try:
-        content = readFile('./log.txt')
+        content = readFile('/tmp/log.txt')
         body = { ifttt['subjectKey']: 'HeytapTask每日报表', ifttt['contentKey']: content }
         url = 'https://maker.ifttt.com/trigger/{event_name}/with/key/{key}'.format(event_name=ifttt_eventName, key=ifttt_apiKey)
         response = requests.post(url, json=body)
@@ -168,7 +164,7 @@ def sendBark(Barkkey1,Barksave1):
     #发送内容
     Barkkey = Barkkey1
     Barksave = Barksave1
-    content = readFile_text('./log.txt')
+    content = readFile_text('/tmp/log.txt')
     data = {
         "title": "HeytapTask每日报表",
         "body": content
