@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2021/7/15
+# @Time    : 2021/7/18
 # @Author  : hwkxk(丶大K丶)
 # @Email   : k@hwkxk.cn
 
@@ -32,8 +32,7 @@ def readConfig():
         userconfig.read(path,encoding="utf-8")
         return userconfig
     except Exception as e:
-        print(traceback.format_exc())
-        logging.error('1.请检查是否在目录下建立了config.ini')
+        raise e
 
 #获取个人信息，判断登录状态
 def get_infouser(HT_cookies,HT_UA):
@@ -353,9 +352,12 @@ def tiantianjifen_lottery():
         msg = res['msg']
         print(msg)
         goods_name = res['data']['goods_name']
-        logger.info('【天天积分翻倍活动】第'+ str(x) +'次，获得:'+ str(goods_name))
+        if len(goods_name) == 0:
+            logger.info('【天天积分翻倍活动】第'+ str(x) +'次，未中奖')
+        else:
+            logger.info('【天天积分翻倍活动】第'+ str(x) +'次，获得:'+ str(goods_name))
         x += 1
-        time.sleep(5)
+        time.sleep(3)
 
 
 #位置: APP → 我的 → 赚积分 → 转盘
@@ -374,25 +376,31 @@ def zhuanjifen_task():
     print(res)
     goods_name = res['data']['goods_name']
     msg = res['msg']
-    logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
-
+    if len(goods_name) == 0:
+        logger.info('【赚积分-天天抽奖】: 未中奖！')
+    else:
+        logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
     taskList=client.get('https://hd.oppo.com/task/list?aid=1418', headers=headers)
     taskList=taskList.json()
-    for i, jobs in enumerate(taskList['data']):
+    for jobs in taskList['data']:
         print (jobs['t_status']) #print (jobs.get('t_index'))
         if jobs['t_status'] == 0:
             t_index=jobs['t_index']
             aid=t_index[:t_index.index("i")]
             finishmsg=task_finish (aid,t_index)
-            if finishmsg['no']==200:
-                time.sleep(1)
+            if finishmsg['no'] == '200':
+                time.sleep(3)
                 awardmsg=task_award(aid,t_index)
-                if awardmsg['no']==200:
+                if awardmsg['no'] == '200':
+                    time.sleep(3)
                     res = lottery(data)
                     msg = res['msg']
                     print(msg)
                     goods_name = res['data']['goods_name']
-                    logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
+                    if len(goods_name) == 0:
+                        logger.info('【赚积分-天天抽奖】: 未中奖！')
+                    else:
+                        logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
                     time.sleep(3)
                 else:
                     print('领取奖励出错：', awardmsg)
@@ -402,13 +410,16 @@ def zhuanjifen_task():
             t_index=jobs['t_index']
             aid=t_index[:t_index.index("i")]
             awardmsg=task_award(aid,t_index)
-            print(awardmsg['no'])
-            if awardmsg['no']==200:
+            if awardmsg['no'] == '200':
+                time.sleep(3)
                 res = lottery(data)
                 msg = res['msg']
                 print(msg)
                 goods_name = res['data']['goods_name']
-                logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
+                if len(goods_name) == 0:
+                    logger.info('【赚积分-天天抽奖】: 未中奖！')
+                else:
+                    logger.info('【赚积分-天天抽奖】获得:'+ str(goods_name))
                 time.sleep(3)
             else:
                 print('领取奖励出错：', awardmsg)
@@ -423,9 +434,12 @@ def zhinengshenghuo_lottery():
         msg = res['msg']
         print(msg)
         goods_name = res['data']['goods_name']
-        logger.info('【智能生活转盘】第'+ str(x) +'次，获得:'+str(goods_name))
+        if len(goods_name) == 0:
+            logger.info('【智能生活转盘】第'+ str(x) +'次,未中奖！')
+        else:
+            logger.info('【智能生活转盘】第'+ str(x) +'次，获得:'+str(goods_name))
         x += 1
-        time.sleep(5)
+        time.sleep(3)
 
 #realme宠粉计划-幸运抽奖-转盘
 def realme_lottery():
@@ -434,7 +448,10 @@ def realme_lottery():
     msg = res['msg']
     print(msg)
     goods_name = res['data']['goods_name']
-    logger.info('【realme宠粉计划转盘】获得:'+ str(goods_name))
+    if len(goods_name) == 0:
+        logger.info('【realme宠粉计划转盘】: 未中奖！')
+    else:
+        logger.info('【realme宠粉计划转盘】获得:'+ str(goods_name))
     time.sleep(3)
 
 #
@@ -452,11 +469,74 @@ def vipdate_lottery():
         msg = res['msg']
         print(msg)
         goods_name = res['data']['goods_name']
-        logger.info('【瓜分1亿转盘抽奖活动】获得:'+ str(goods_name))
+        if len(goods_name) == 0:
+            logger.info('【瓜分1亿转盘抽奖活动】获得:'+ str(goods_name))
+        else:
+            logger.info('【瓜分1亿转盘抽奖活动】: 未中奖！')
     else:
         logger.info('【瓜分1亿转盘抽奖活动已结束，不再执行】')
+    time.sleep(3)
 
-
+#位置: APP → 首页 → 狂撒百万积分 
+def jifenpengzhang_task():
+    dated = int(time.time())
+    endtime = time.mktime(time.strptime("2021-7-31 23:59:59", '%Y-%m-%d %H:%M:%S'))#设置活动结束日期
+    if dated < endtime :
+        headers = {
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'User-Agent': HT_UserAgent,
+        'Accept-Encoding': 'gzip, deflate',
+        'cookie': HT_cookies,
+        'X-Requested-With': 'XMLHttpRequest',
+        'referer':'https://hd.oppo.com/act/m/2021/jifenzhuanpan/index.html?us=gerenzhongxin&um=hudongleyuan&uc=yingjifen'
+        }
+        data = "aid=1594&lid=1482&mobile=&authcode=&captcha=&isCheck=0&source_type=501&s_channel=oppo_appstore&sku=&spu="
+        res = lottery(data)
+        print(res)
+        goods_name = res['data']['goods_name']
+        msg = res['msg']
+        if len(goods_name) == 0:
+            logger.info('【狂撒百万积分-转盘】: 未中奖！')
+        else:
+            logger.info('【狂撒百万积分-转盘】获得:'+ str(goods_name))
+        taskList=client.get('https://hd.oppo.com/task/list?aid=1594', headers=headers)
+        taskList=taskList.json()
+        time.sleep(3)
+        for jobs in taskList['data']:
+            print (jobs['t_status'],jobs['title'],jobs['t_index']) #print (jobs.get('t_index'))
+            if jobs['t_status'] == 0:
+                t_index=jobs['t_index']
+                aid=t_index[:t_index.index("i")]
+                title=jobs['title']
+                finishmsg=task_finish (aid,t_index)
+                if finishmsg['no'] == '200':
+                    time.sleep(3)
+                    awardmsg=task_award(aid,t_index)
+                    if awardmsg['no'] == '200':
+                        msg = awardmsg['msg']
+                        print(msg)
+                        logger.info('【狂撒百万积分-'+ str(title) +'】:'+ str(msg))
+                        time.sleep(3)
+                    else:
+                        print('领取奖励出错：', awardmsg)
+                else:
+                    print('完成任务出错：', finishmsg)
+            elif jobs['t_status'] == 1:
+                t_index=jobs['t_index']
+                aid=t_index[:t_index.index("i")]
+                title=jobs['title']
+                awardmsg=task_award(aid,t_index)
+                if awardmsg['no'] == '200':
+                    msg = awardmsg['msg']
+                    print(msg)
+                    logger.info('【狂撒百万积分-'+ str(title) +'】:'+ str(msg))
+                    time.sleep(3)
+                else:
+                    print('领取奖励出错：', awardmsg)
+    else:
+        logger.info('【狂撒百万积分活动已结束，不再执行】')
+    time.sleep(3)
 
 #腾讯云函数入口
 def main(event, context):
@@ -479,10 +559,11 @@ def main(event, context):
         daily_sharegoods() #执行每日商品分享任务
         daily_viewpush() #执行每日点推送任务
         tiantianjifen_lottery() #天天积分翻倍
-        zhuanjifen_task() #我的-赚积分-转盘
+        zhuanjifen_task() #我的-赚积分-任务&转盘
         vipdate_lottery() #超级会员日转盘
-        zhinengshenghuo_lottery() #智能生活-0元抽奖-宠粉转盘 可能此活动中奖率低！返回空白是正常
+        zhinengshenghuo_lottery() #智能生活-0元抽奖-宠粉转盘 可能此活动中奖率低！
         realme_lottery() #realme宠粉计划 转盘
+        jifenpengzhang_task() #狂撒百万积分-任务&转盘
 
     
     if users.has_option("dingding", 'dingtalkWebhook'):
